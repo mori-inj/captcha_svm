@@ -105,7 +105,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 
 		srand((unsigned)time(NULL));
 		
-		svm.read_data(0,1);
+		svm.read_data(1,7);
 		svm.init_kernel_matrix();
 		svm.training((long double)1e-16);
 		svm.testing();

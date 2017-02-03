@@ -17,7 +17,7 @@ protected:
 	static const int CLASS_NUM = 2;
 	int Kernel_Mode;
 
-	long double E;
+	long double E;				//2.718281828
 	long double C;				//used for soft margin svm
 
 	int LOOP;		//# of iterations per each loop escape test

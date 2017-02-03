@@ -1,7 +1,8 @@
 #include "bin_svm.h"
 void binSVM::init(int loop, int data_num, int test_num, int kernel_mode)
 {
-	fflush(stdout);
+	srand((unsigned)time(NULL));
+
 	E = 2.718281828;
 	C = 10000000.0;
 
@@ -227,7 +228,7 @@ void binSVM::training(long double relative_error)
 			two = M-1;*/
 				
 
-
+		//pick two alpha heuristically
 		if(loop==0)
 		{
 			one = -1;
@@ -266,7 +267,7 @@ void binSVM::training(long double relative_error)
 
 
 
-
+		//update alpha by SMO
 		long double U,V;
 		if (Y[one] != Y[two])
 		{
@@ -298,7 +299,7 @@ void binSVM::training(long double relative_error)
 
 		long double Alpha_one_new = Alpha[one] + Y[one]*Y[two]*(Alpha[two] - Alpha_two_new);
 
-		//get W
+		//get W (cached)
 		if (Kernel_Mode == 0)
 		{
 			for(int i=0; i<N; i++)
@@ -311,7 +312,7 @@ void binSVM::training(long double relative_error)
 			}
 		}
 
-
+		//get preditcted value of training data (cached)
 		for(int i = 0; i<M; i++)
 		{
 			predict_training[i] -= Alpha[one]*Y[one]*kernel_matrix[one][i];
@@ -329,7 +330,7 @@ void binSVM::training(long double relative_error)
 
 
 
-
+		//test if L converges so that the loop can be escaped. checks on every LOOPth loops.
 		if(loop%LOOP==1)
 		{
 			L = 0.0;
