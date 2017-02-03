@@ -1,13 +1,15 @@
 #include "bin_svm.h"
-
-binSVM::binSVM(int loop, int data_num, int test_num, int n, int kernel_mode)
+void binSVM::init(int loop, int data_num, int test_num, int kernel_mode)
 {
+	fflush(stdout);
+	E = 2.718281828;
+	C = 10000000.0;
+
 	Kernel_Mode = kernel_mode;
 	LOOP = loop;
 	DATA_NUM = data_num;
 	TEST_NUM = test_num;
 	M = CLASS_NUM*DATA_NUM;
-	N = n;
 
 	W = vector<long double>(N);
 	X = vector<Data>(M);
@@ -36,15 +38,27 @@ binSVM::binSVM(int loop, int data_num, int test_num, int n, int kernel_mode)
 	oldL = 0;
 }
 
-binSVM::binSVM(int loop, int data_num, int test_num, int n, int kernel_mode, wstring data_filepath)
+binSVM::binSVM(int loop, int data_num, int test_num, int kernel_mode)
 {
-	binSVM(loop, data_num, test_num, n, kernel_mode);
-	FILEPATH = data_filepath;
+	init(loop, data_num, test_num, kernel_mode);
+}
+
+binSVM::binSVM(int loop, int data_num, int test_num, int n, int kernel_mode)
+{
+	N = n;
+	init(loop, data_num, test_num, kernel_mode);
+}
+
+binSVM::binSVM(int loop, int data_num, int test_num, int n, int kernel_mode, const wstring data_filepath)
+{
+	N = n;
+	FILEPATH = wstring(data_filepath);
+	init(loop, data_num, test_num, kernel_mode);
 }
 
 void binSVM::read_data(int first, int second)
 {
-	WCHAR filename[1024], txt_filename[1024];
+	WCHAR txt_filename[1024];
 	int bin_class[2] = {first, second};
 
 	for(int i = 0; i < CLASS_NUM; i++)
@@ -90,15 +104,15 @@ void binSVM::read_data(int first, int second)
 	fflush(stdout);
 }
 
-void binSVM::read_data(int first, int second, wstring data_filepath)
+void binSVM::read_data(int first, int second, const wstring data_filepath)
 {
-	FILEPATH = data_filepath;
+	FILEPATH = wstring(data_filepath);
 	read_data(first, second);
 }
 
 void binSVM::read_training_data(WCHAR* filename, int ith)
 {
-	FILE* fp = _wfopen(filename,L"r");
+	FILE* fp = _wfopen(filename, L"r");
 
 	
 	for(int i = 0; i < N; i++)

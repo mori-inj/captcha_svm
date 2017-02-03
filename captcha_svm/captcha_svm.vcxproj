@@ -80,11 +80,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="bin_img_svm.cpp" />
     <ClCompile Include="captcha_svm.cpp" />
     <ClCompile Include="data.cpp" />
     <ClCompile Include="bin_svm.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="bin_img_svm.h" />
+    <ClInclude Include="bin_svm.h" />
     <ClInclude Include="data.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
