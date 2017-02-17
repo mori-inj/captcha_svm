@@ -1,6 +1,10 @@
 #include "bin_svm.h"
-void binSVM::init(int loop, int data_num, int test_num, int kernel_mode)
+
+binSVM::binSVM(int class_num, int loop, int data_num, int test_num, int n, int kernel_mode, const wstring data_filepath)
 {
+	N = n;
+	FILEPATH = wstring(data_filepath);
+	CLASS_NUM = class_num;
 	srand((unsigned)time(NULL));
 
 	E = 2.718281828;
@@ -13,21 +17,21 @@ void binSVM::init(int loop, int data_num, int test_num, int kernel_mode)
 	M = CLASS_NUM*DATA_NUM;
 
 	W = vector<long double>(N);
-	X = vector<Data>(M);
-	Y = vector<int>(M);
-	T_X = vector<Data>(CLASS_NUM*TEST_NUM);
-	T_Y = vector<int>(CLASS_NUM*TEST_NUM);
-	for(auto& it : X)
+	X = new vector<Data>(M);
+	Y = new vector<int>(M);
+	T_X = new vector<Data>(CLASS_NUM*TEST_NUM);
+	T_Y = new vector<int>(CLASS_NUM*TEST_NUM);
+	for(auto& it : *X)
 	{
 		it = Data(N);
 	}
-	for(auto& it : T_X)
+	for(auto& it : *T_X)
 	{
 		it = Data(N);
 	}
 
-	kernel_matrix = vector<vector<long double> >(M);
-	for(auto& vec : kernel_matrix)
+	kernel_matrix = new vector<vector<long double> >(M);
+	for(auto& vec : *kernel_matrix)
 	{
 		vec = vector<long double>(M);
 	}
@@ -39,26 +43,67 @@ void binSVM::init(int loop, int data_num, int test_num, int kernel_mode)
 	oldL = 0;
 }
 
-binSVM::binSVM(int loop, int data_num, int test_num, int kernel_mode)
+void binSVM::copy_training(vector<Data>* X_source, vector<int>* Y_source)
 {
-	init(loop, data_num, test_num, kernel_mode);
+	X = X_source;
+	Y = Y_source;
 }
 
-binSVM::binSVM(int loop, int data_num, int test_num, int n, int kernel_mode)
+void binSVM::copy_test(vector<Data>* T_X_source, vector<int>* T_Y_source)
 {
-	N = n;
-	init(loop, data_num, test_num, kernel_mode);
+	T_X = T_X_source;
+	T_Y = T_Y_source;
 }
 
-binSVM::binSVM(int loop, int data_num, int test_num, int n, int kernel_mode, const wstring data_filepath)
+void binSVM::read_data(int first)
 {
-	N = n;
-	FILEPATH = wstring(data_filepath);
-	init(loop, data_num, test_num, kernel_mode);
+	this->class1 = first;
+
+	WCHAR txt_filename[1024];
+
+	for(int i = 0; i < CLASS_NUM; i++)
+	{
+		for(int j = 0; j < DATA_NUM; j++)
+		{
+			wsprintf(txt_filename,FILEPATH.c_str(), i, j, L".txt");
+			read_training_data(txt_filename, i*(DATA_NUM)+j);
+				
+			if(i==first)
+				(*Y)[i*(DATA_NUM)+j] = 1;
+			else
+				(*Y)[i*(DATA_NUM)+j] = -1;
+
+		}
+	}
+
+	printf("input trainig done\n");
+	fflush(stdout);
+
+
+
+	for(int i = 0; i < CLASS_NUM; i++)
+	{
+		for(int j = 0; j < TEST_NUM; j++)
+		{
+			wsprintf(txt_filename,FILEPATH.c_str(), i, j+DATA_NUM, L".txt");
+			read_test_data(txt_filename, i*(TEST_NUM)+j);
+				
+			if(i==first)
+				(*T_Y)[i*(TEST_NUM)+j] = 1;
+			else
+				(*T_Y)[i*(TEST_NUM)+j] = -1;
+		}
+	}
+
+	printf("input test done\n");
+	fflush(stdout);
 }
 
 void binSVM::read_data(int first, int second)
 {
+	this->class1 = first;
+	this->class2 = second;
+
 	WCHAR txt_filename[1024];
 	int bin_class[2] = {first, second};
 
@@ -67,15 +112,13 @@ void binSVM::read_data(int first, int second)
 		for(int j = 0; j < DATA_NUM; j++)
 		{
 			wsprintf(txt_filename,FILEPATH.c_str(),bin_class[i],j,L".txt");
-			/*wsprintf(filename,FILEPATH.c_str(),bin_class[i],j,L".png");
-			if(_waccess(filename, 0) != 0)
-			{
-				Img2Txt(filename, txt_filename, h_max, w_max);
-			}*/
 			read_training_data(txt_filename, i*(DATA_NUM)+j);
 				
-			// class is 1 if i==0, class is -1 if i==1
-			Y[i*(DATA_NUM)+j] = -2*i+1;
+			if(i==first)
+				(*Y)[i*(DATA_NUM)+j] = 1;
+			else
+				(*Y)[i*(DATA_NUM)+j] = -1;
+
 		}
 	}
 
@@ -89,26 +132,17 @@ void binSVM::read_data(int first, int second)
 		for(int j = 0; j < TEST_NUM; j++)
 		{
 			wsprintf(txt_filename,FILEPATH.c_str(),bin_class[i], j+DATA_NUM, L".txt");
-			/*wsprintf(filename,FILEPATH.c_str(),bin_class[i], j+DATA_NUM, L".png");
-			if(_waccess(filename, 0) != 0)
-			{
-				Img2Txt(filename, txt_filename, h_max, w_max);
-			}*/
 			read_test_data(txt_filename, i*(TEST_NUM)+j);
 				
-			// class is 1 if i==0, class is -1 if i==1
-			T_Y[i*(TEST_NUM)+j] = -2*i+1;
+			if(i==first)
+				(*T_Y)[i*(TEST_NUM)+j] = 1;
+			else
+				(*T_Y)[i*(TEST_NUM)+j] = -1;
 		}
 	}
 
 	printf("input test done\n");
 	fflush(stdout);
-}
-
-void binSVM::read_data(int first, int second, const wstring data_filepath)
-{
-	FILEPATH = wstring(data_filepath);
-	read_data(first, second);
 }
 
 void binSVM::read_training_data(WCHAR* filename, int ith)
@@ -120,7 +154,7 @@ void binSVM::read_training_data(WCHAR* filename, int ith)
 	{
 		long double temp;
 		fwscanf(fp, L"%Lf", &temp);
-		X[ith].set(i, temp);
+		(*X)[ith].set(i, temp);
 	}
 	
 	fclose(fp);
@@ -134,11 +168,92 @@ void binSVM::read_test_data(WCHAR* filename, int ith)
 	{
 		long double temp;
 		fwscanf(fp, L"%Lf", &temp);
-		T_X[ith].set(i, temp);
+		(*T_X)[ith].set(i, temp);
 	}
 
 
 	fclose(fp);
+}
+
+void binSVM::add_data(int first, int num)
+{
+	WCHAR txt_filename[1024];
+	
+	
+	for(int i = 0; i<num; i++)
+	{
+		wsprintf(txt_filename,FILEPATH.c_str(), first, DATA_NUM+TEST_NUM+i, L".txt");
+		X->push_back(Data(N));
+		read_training_data(txt_filename, M+i);
+		if(first == this->class1)
+			Y->push_back(1);
+		else
+			Y->push_back(-1);
+	}
+	
+	M += num;
+	for(int i=0; i<num; i++)
+	{
+		W.push_back(0);
+		Alpha.push_back(0);
+		predict_training.push_back(0);
+	}
+
+	for(auto& vec : *kernel_matrix)
+	{
+		for(int i=0; i<num; i++)
+			vec.push_back(0);
+	}
+
+	for(int i=0; i<num; i++)
+		kernel_matrix->push_back(vector<long double>(M));
+
+	for(int i=0; i<M-num; i++)
+	{
+		for(int j=M-num; j<M; j++)
+			(*kernel_matrix)[i][j] = kernel_func((*X)[i], (*X)[j]);
+	}
+	for(int i=M-num; i<M; i++)
+	{
+		for(int j=0; j<M; j++)
+			(*kernel_matrix)[i][j] = kernel_func((*X)[i], (*X)[j]);
+	}
+
+}
+
+void binSVM::add_data(int first, Data Sample)
+{
+	X->push_back(Sample);
+	if(first == this->class1)
+		Y->push_back(1);
+	else
+		Y->push_back(-1);
+
+	M ++;
+	
+	W.push_back(0);
+	Alpha.push_back(0);
+	predict_training.push_back(0);
+	
+
+	for(auto& vec : *kernel_matrix)
+	{
+		vec.push_back(0);
+	}
+
+	
+	kernel_matrix->push_back(vector<long double>(M));
+
+	for(int i=0; i<M-1; i++)
+	{
+		for(int j=M-1; j<M; j++)
+			(*kernel_matrix)[i][j] = kernel_func((*X)[i], (*X)[j]);
+	}
+	for(int i=M-1; i<M; i++)
+	{
+		for(int j=0; j<M; j++)
+			(*kernel_matrix)[i][j] = kernel_func((*X)[i], (*X)[j]);
+	}
 }
 
 void binSVM::init_kernel_matrix()
@@ -149,7 +264,7 @@ void binSVM::init_kernel_matrix()
 	fflush(stdout);
 	for(int i = 0; i<M*M; i++)
 	{
-		kernel_matrix[i/M][i%M] = kernel_func(X[i/M],X[i%M]);
+		(*kernel_matrix)[i/M][i%M] = kernel_func((*X)[i/M], (*X)[i%M]);
 	}
 	crtime = time(0);
 	printf(ctime(&crtime));
@@ -203,7 +318,7 @@ long double binSVM::predict(Data& x)
 		long double ret = 0;
 		for(int i=0; i<M; i++)
 		{
-			ret += Alpha[i]*Y[i]*kernel_func(X[i],x);
+			ret += Alpha[i] * (*Y)[i] * kernel_func((*X)[i], x);
 		}
 		ret += Bias;
 
@@ -220,7 +335,6 @@ void binSVM::training(long double relative_error)
 		static int one,two;
 		long double E1;
 		long double E2;
-			
 
 		/*one = rand()%M;
 		two = rand()%(M-1);
@@ -245,17 +359,17 @@ void binSVM::training(long double relative_error)
 				
 			if(abs(Alpha[one]) < 1e-8)
 			{
-				if(Y[one]*predict_training[one] < 0) //1
+				if((*Y)[one] * predict_training[one] < 0) //1
 					break;
 			}
 			else if(abs(Alpha[one]-C) < 1e-8)
 			{
-				if(Y[one]*predict_training[one] > 0) //1
+				if((*Y)[one] * predict_training[one] > 0) //1
 					break;
 			}
 			else
 			{
-				if(abs(Y[one]*predict_training[one] - 1) > 1e-8)
+				if(abs((*Y)[one] * predict_training[one] - 1) > 1e-8)
 					break;
 			}
 		}
@@ -263,13 +377,12 @@ void binSVM::training(long double relative_error)
 		two = rand()%(M-1);
 		if(one == two)
 			two = M-1;
-		
 
 
 
 		//update alpha by SMO
 		long double U,V;
-		if (Y[one] != Y[two])
+		if ((*Y)[one] != (*Y)[two])
 		{
 			U = max(0, Alpha[two] - Alpha[one]);
 			V = min(C, C - Alpha[one] + Alpha[two]);
@@ -280,14 +393,16 @@ void binSVM::training(long double relative_error)
 			V = min(C, Alpha[one] + Alpha[two]);
 		}
 
-		E1 = predict_training[one] - Y[one];
-		E2 = predict_training[two] - Y[two];
-		long double K = kernel_matrix[one][one] + kernel_matrix[two][two] - 2 * kernel_matrix[one][two];
+		E1 = predict_training[one] - (*Y)[one];
+		E2 = predict_training[two] - (*Y)[two];
+		long double K = (*kernel_matrix)[one][one] 
+						+ (*kernel_matrix)[two][two] 
+						- 2 * (*kernel_matrix)[one][two];
 		if(abs(K)<1e-8)
 		{
 			continue;
 		}
-		long double Alpha_two_new_unc = Alpha[two] + (Y[two] * (E1-E2) / K);
+		long double Alpha_two_new_unc = Alpha[two] + ((*Y)[two] * (E1-E2) / K);
 		long double Alpha_two_new;
 
 		if (Alpha_two_new_unc > V)
@@ -297,36 +412,34 @@ void binSVM::training(long double relative_error)
 		else
 			Alpha_two_new = Alpha_two_new_unc;
 
-		long double Alpha_one_new = Alpha[one] + Y[one]*Y[two]*(Alpha[two] - Alpha_two_new);
+		long double Alpha_one_new = Alpha[one] + (*Y)[one] * (*Y)[two] * (Alpha[two] - Alpha_two_new);
 
 		//get W (cached)
 		if (Kernel_Mode == 0)
 		{
 			for(int i=0; i<N; i++)
 			{
-				W[i] -= Alpha[one]*Y[one]*X[one].d1(i);
-				W[i] -= Alpha[two]*Y[two]*X[two].d1(i);
+				W[i] -= Alpha[one] * (*Y)[one] * (*X)[one].d1(i);
+				W[i] -= Alpha[two] * (*Y)[two] * (*X)[two].d1(i);
 
-				W[i] += Alpha_one_new * Y[one] * X[one].d1(i);
-				W[i] += Alpha_two_new * Y[two] * X[two].d1(i);
+				W[i] += Alpha_one_new * (*Y)[one] * (*X)[one].d1(i);
+				W[i] += Alpha_two_new * (*Y)[two] * (*X)[two].d1(i);
 			}
 		}
 
 		//get preditcted value of training data (cached)
 		for(int i = 0; i<M; i++)
 		{
-			predict_training[i] -= Alpha[one]*Y[one]*kernel_matrix[one][i];
-			predict_training[i] -= Alpha[two]*Y[two]*kernel_matrix[two][i];
-			predict_training[i] += Alpha_one_new*Y[one]*kernel_matrix[one][i];
-			predict_training[i] += Alpha_two_new*Y[two]*kernel_matrix[two][i];
+			predict_training[i] -= Alpha[one] * (*Y)[one] * (*kernel_matrix)[one][i];
+			predict_training[i] -= Alpha[two] * (*Y)[two] * (*kernel_matrix)[two][i];
+			predict_training[i] += Alpha_one_new * (*Y)[one] * (*kernel_matrix)[one][i];
+			predict_training[i] += Alpha_two_new * (*Y)[two] * (*kernel_matrix)[two][i];
 		}
 
 		Alpha[one] = Alpha_one_new;
 		Alpha[two] = Alpha_two_new;
 
 		loop++;
-
-
 
 
 
@@ -351,7 +464,7 @@ void binSVM::training(long double relative_error)
 				{
 					for(int j = 0; j < M; j++)
 					{
-						ret += Alpha[i] * Alpha[j] * Y[i] * Y[j] * kernel_matrix[i][j];
+						ret += Alpha[i] * Alpha[j] * (*Y)[i] * (*Y)[j] * (*kernel_matrix)[i][j];
 					}
 				}
 			}
@@ -360,8 +473,6 @@ void binSVM::training(long double relative_error)
 			//escape condition
 			if(loop > LOOP*10)
 			{
-				printf("%d %.20Lf\n",(int)loop,L);
-				fflush(stdout);
 				if(L - oldL <= L*relative_error)
 					break;
 			}
@@ -386,7 +497,7 @@ void binSVM::calc_bias()
 	{
 		if (1e-5 < Alpha[i] && Alpha[i] < C - 1e-5)
 		{
-			long double ret = (1 - Y[i]*(predict(X[i])-Bias))/Y[i];
+			long double ret = (1 - (*Y)[i] * (predict((*X)[i])-Bias)) / (*Y)[i];
 			ret_sum += ret;
 			ret_cnt++;
 		}
@@ -403,20 +514,20 @@ void binSVM::testing()
 	long double error_sum = 0;
 	for(int i = 0; i<M; i++)
 	{
-		long double predicted = sigmoid(predict(X[i]))*2-1;
-		if((Y[i]==1 && predicted < 0.5) || (Y[i]==-1 && predicted > -0.5))
+		long double predicted = sigmoid(predict((*X)[i]))*2-1;
+		if(((*Y)[i]==1 && predicted < 0.5) || ((*Y)[i]==-1 && predicted > -0.5))
 			wrong_count++;
-		error_sum += abs(predicted - Y[i]);
+		error_sum += abs(predicted - (*Y)[i]);
 	}
 
 	int test_wrong_count = 0;
 	long double test_error_sum = 0;
 	for(int i = 0; i<CLASS_NUM*TEST_NUM; i++)
 	{
-		long double predicted = sigmoid(predict(T_X[i]))*2-1;
-		if((T_Y[i]==1 && predicted < 0.5) || (T_Y[i]==-1 && predicted > -0.5))
+		long double predicted = sigmoid(predict((*T_X)[i]))*2-1;
+		if(((*T_Y)[i]==1 && predicted < 0.5) || ((*T_Y)[i]==-1 && predicted > -0.5))
 			test_wrong_count++;
-		test_error_sum += abs(predicted - T_Y[i]);
+		test_error_sum += abs(predicted - (*T_Y)[i]);
 	}
 
 	printf("L: %Lf   wrong:%d/%d(=%Lf)  error_sum(cost):%Lf    error_avg:%Lf    /test:/  wrong:%d/%d(=%Lf)  error_sum(cost):%Lf    error_avg:%Lf\n",

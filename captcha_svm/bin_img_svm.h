@@ -1,3 +1,4 @@
+/*
 #ifndef __BIN_IMG_SVM__
 #define __BIN_IMG_SVM__
 
@@ -20,10 +21,14 @@ protected:
 public:
 	binIMG_SVM(int loop, int data_num, int test_num, int h, int w, int kernel_mode);
 	binIMG_SVM(int loop, int data_num, int test_num, int h, int w, int kernel_mode, const wstring data_filepath);
+	binIMG_SVM(int class_num, int loop, int data_num, int test_num, int h, int w, int kernel_mode, const wstring data_filepath);
+	void read_data(int first);
 	void read_data(int first, int second);
+	void add_data(int first, int num);
 	
 	void PreProc(HDC hdc, WCHAR* filename, int first, int second, int num);
 	void img2txt(WCHAR* filename, WCHAR* txt_filename);
 };
 
 #endif
+*/

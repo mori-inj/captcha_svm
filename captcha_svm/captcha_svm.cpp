@@ -3,7 +3,7 @@
 #include <string.h>
 #include <limits>
 #include <time.h>
-#include "bin_img_svm.h"
+#include "bin_svm.h"
 //#include "resource.h"
 
 #pragma warning(disable:4996)
@@ -93,7 +93,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 	RECT crt;
 
 	const wstring filepath = L"//vmware-host/Shared Folders/Downloads/classified/sorted/preproc/%d/%d%s";
-	static binIMG_SVM svm(100000, 1000, 200, 14, 12, 1, filepath);
+	static binSVM img_svm(10, 100000, 100, 20, 3*14*12, 1, filepath);
 	//static binIMG_SVM svm(100000, 5000, 1000, 700, 900, 1, filepath");
 	
 
@@ -102,13 +102,16 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 	case WM_CREATE:
 		//SetTimer(hWnd, 1, 10, 0);
 		//InvalidateRect(hWnd, NULL, FALSE);
-
-		srand((unsigned)time(NULL));
 		
-		svm.read_data(1,7);
-		svm.init_kernel_matrix();
-		svm.training((long double)1e-16);
-		svm.testing();
+		img_svm.read_data(1);
+		img_svm.init_kernel_matrix();
+		img_svm.training((long double)1e-16);
+		img_svm.testing();
+
+		img_svm.add_data(1,100);
+		img_svm.testing();
+		img_svm.training((long double)1e-16);
+		img_svm.testing();
 
 		break;
 
