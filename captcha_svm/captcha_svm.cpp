@@ -3,6 +3,7 @@
 #include <string.h>
 #include <limits>
 #include <time.h>
+#include "multi_svm.h"
 #include "bin_svm.h"
 //#include "resource.h"
 
@@ -93,30 +94,32 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 	RECT crt;
 
 	const wstring filepath = L"//vmware-host/Shared Folders/Downloads/classified/sorted/preproc/%d/%d%s";
-	static binSVM img_svm(10, 100000, 100, 20, 3*14*12, 1, filepath);
+	static multiSVM img_svm(10, 100000, 200, 40, 3*14*12, 1, filepath);
 	//static binIMG_SVM svm(100000, 5000, 1000, 700, 900, 1, filepath");
+
+	static BOOL is_trained, is_tested;
 	
 
 	switch (iMsg)
 	{
 	case WM_CREATE:
-		//SetTimer(hWnd, 1, 10, 0);
+		SetTimer(hWnd, 1, 1, 0);
 		//InvalidateRect(hWnd, NULL, FALSE);
 		
-		img_svm.read_data(1);
+		img_svm.read_data();
 		img_svm.init_kernel_matrix();
-		img_svm.training((long double)1e-16);
+		img_svm.training((long double)1e-7);
 		img_svm.testing();
 
-		img_svm.add_data(1,100);
+		/*img_svm.add_data(1,100);
 		img_svm.testing();
 		img_svm.training((long double)1e-16);
-		img_svm.testing();
+		img_svm.testing();*/
 
 		break;
 
 	case WM_TIMER:
-		//InvalidateRect(hWnd, NULL, FALSE);
+		InvalidateRect(hWnd, NULL, FALSE);
 		break;
 
 	case WM_PAINT:
@@ -133,14 +136,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 
 		//FillRect(MemDC, &crt, hBrush);
 		//SetBkColor(MemDC, RGB(255, 255, 255));
+
 		
 		
 
 		BitBlt(hdc, 0, 0, crt.right, crt.bottom, MemDC, 0, 0, SRCCOPY);
 		SelectObject(MemDC, OldBit);
 		DeleteDC(MemDC);
-		//SelectObject(MemDC, oldPen);
-		//DeleteObject(hPen);
 		//SelectObject(MemDC, oldBrush);
 		//DeleteObject(hBrush);
 		DeleteObject(hBit);

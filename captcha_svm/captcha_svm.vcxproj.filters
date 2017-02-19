@@ -27,6 +27,9 @@
     <ClCompile Include="bin_img_svm.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="multi_svm.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="data.h">
@@ -36,6 +39,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="bin_img_svm.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="multi_svm.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

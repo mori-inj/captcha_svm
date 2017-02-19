@@ -157,6 +157,7 @@
     <ClInclude Include="bin_img_svm.h" />
     <ClInclude Include="bin_svm.h" />
     <ClInclude Include="data.h" />
+    <ClInclude Include="multi_svm.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
