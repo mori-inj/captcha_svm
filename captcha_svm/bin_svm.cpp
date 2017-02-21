@@ -543,8 +543,6 @@ void binSVM::training(long double relative_error)
 			{
 				L += Alpha[i];
 			}
-			printf("	M:%d L:%Lf\n", M, L);
-			fflush(stdout);
 
 			long double ret = 0;
 
@@ -564,8 +562,6 @@ void binSVM::training(long double relative_error)
 				}
 			}
 			L -= 0.5*ret;
-			printf("	L:%Lf  1/2ret:%Lf\n", L, 0.5*ret);
-			fflush(stdout);
 
 			//escape condition
 			if(loop > LOOP)

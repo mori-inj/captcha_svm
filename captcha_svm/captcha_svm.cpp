@@ -94,7 +94,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 	RECT crt;
 
 	const wstring filepath = L"//vmware-host/Shared Folders/Downloads/classified/sorted/preproc/%d/%d%s";
-	static multiSVM img_svm(2, 100000, 1000, 1000, 3*14*12, 1, filepath);
+	static multiSVM img_svm(2, 100000, 100, 100, 3*14*12, 1, filepath);
 	//static binIMG_SVM svm(100000, 5000, 1000, 700, 900, 1, filepath");
 
 	static BOOL is_trained, is_tested;
@@ -111,9 +111,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 		img_svm.training((long double)1e-7);
 		img_svm.testing();
 
-		/*for(int i = 0; i < 3; i++)
+		/*for(int i = 0; i < 49; i++)
 		{
-			system("pause");
 			img_svm.add_data(0, 100);
 			img_svm.add_data(1, 100);
 			printf("before train\n"); fflush(stdout);
