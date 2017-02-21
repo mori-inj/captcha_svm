@@ -152,25 +152,30 @@ void binSVM::setY(int first)
 {
 	this->class1 = first;
 
-	char out_filename[1024];
-	sprintf(out_filename, "training_error(%d).txt",first);
-	FILE* fp = fopen(out_filename,"r");
+	//WCHAR out_filename[1024];
+	//wsprintf(out_filename, L"training_error(%d).txt",first);
+	//FILE* fp = _wfopen(out_filename,L"r");
 
 	for(int i = 0; i < CLASS_NUM; i++)
 	{
 		for(int j = 0; j < DATA_NUM; j++)
 		{
-			long double error;
-			long double ret;
+			long double ret = 1.0;
+			/*long double error;
 			long double error_max = 0.0001, thres = 0.1;
+			
 			fscanf(fp,"%Lf",&error);
 
-			if(error > error_max)
-				ret = thres;
-			else
-				ret = (-(1.0-thres)/error_max)*error + 1.0;
+			//if(error > error_max)
+			//	ret = thres;
+			//else
+			//	ret = (-(1.0-thres)/error_max) * error + 1.0;
 
-			assert(ret>=thres);
+			//ret = pow(2.7182818, -10000*error + log(1-thres)/log(2.7182818) ) + thres;
+
+			//ret = thres;
+
+			assert(thres <= ret && ret <= 1.0);*/
 
 			if(i==first)
 				(*Y)[i*(DATA_NUM)+j] = ret;
@@ -179,8 +184,7 @@ void binSVM::setY(int first)
 
 		}
 	}
-
-	fclose(fp);
+	//fclose(fp);
 
 
 	for(int i = 0; i < CLASS_NUM; i++)
@@ -222,8 +226,44 @@ void binSVM::read_test_data(WCHAR* filename, int ith)
 		(*T_X)[ith].set(i, temp);
 	}
 
-
 	fclose(fp);
+}
+
+void binSVM::add_data_from_multi(int first, int num)
+{
+	M += num;
+
+	for(int i = 0; i < num; i++)
+	{
+		W.push_back(0);
+		Alpha.push_back(0);
+		predict_training.push_back(0);
+
+
+		long double ret;
+		if(first == class1)
+			ret = 1;
+		else
+			ret = -1;
+
+		long double predicted = sigmoid(predict((*X)[M+i]))*2-1;
+		long double error = abs(ret - predicted);
+		long double error_max = 0.0001, thres = 1.0;
+			
+		/*if(error > error_max)
+			ret = thres;
+		else
+			ret = (-(1.0-thres)/error_max) * error + 1.0;*/
+
+		ret = thres;
+
+		if(first == class1)
+			Y -> push_back(ret);
+		else
+			Y -> push_back(-ret);
+
+	}
+
 }
 
 void binSVM::add_data(int first, int num)
@@ -492,6 +532,7 @@ void binSVM::training(long double relative_error)
 
 		loop++;
 
+		assert(Alpha[one]>=0 && Alpha[two]>=0);
 
 
 		//test if L converges so that the loop can be escaped. checks on every LOOPth loops.
@@ -502,6 +543,9 @@ void binSVM::training(long double relative_error)
 			{
 				L += Alpha[i];
 			}
+			printf("	M:%d L:%Lf\n", M, L);
+			fflush(stdout);
+
 			long double ret = 0;
 
 			if (Kernel_Mode == 0)
@@ -520,16 +564,18 @@ void binSVM::training(long double relative_error)
 				}
 			}
 			L -= 0.5*ret;
+			printf("	L:%Lf  1/2ret:%Lf\n", L, 0.5*ret);
+			fflush(stdout);
 
 			//escape condition
-			if(loop > LOOP*10)
+			if(loop > LOOP)
 			{
 				if(L - oldL <= L*relative_error)
 					break;
 			}
 			oldL = L;
-			printf("%10lu: %Lf\n",loop, L);
-			fflush(stdout);
+			//printf("%10lu: %Lf\n",loop, L);
+			//fflush(stdout);
 		}
 	}
 

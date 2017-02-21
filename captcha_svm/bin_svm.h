@@ -59,6 +59,7 @@ public:
 	void read_data(int first);
 	void read_data(int first, int second);
 	void setY(int first);
+	void add_data_from_multi(int first, int num);
 	void add_data(int first, int num);
 	void add_data(int first, Data Sample);
 	void init_kernel_matrix();

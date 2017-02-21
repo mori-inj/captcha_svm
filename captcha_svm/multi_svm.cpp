@@ -52,7 +52,6 @@ void multiSVM::read_data()
 
 	printf("input test done\n");
 	fflush(stdout);
-
 	for(int i = 0; i < CLASS_NUM; i++)
 	{
 		svm[i].copy_training(X);
@@ -61,6 +60,60 @@ void multiSVM::read_data()
 	}
 }
 
+void multiSVM::add_data(int first, int num)
+{
+	WCHAR txt_filename[1024];
+	
+	static int nth = DATA_NUM + TEST_NUM;
+	for(int i = 0; i<num; i++)
+	{
+		wsprintf(txt_filename, FILEPATH.c_str(), first, nth+i, L".txt");
+		X->push_back(Data(N));
+		read_training_data(txt_filename, M+i);
+	}
+	
+	nth += num;
+	M += num;
+	for(int i=0; i<num; i++)
+	{
+		W.push_back(0);
+		Alpha.push_back(0);
+		predict_training.push_back(0);
+	}
+
+	for(auto& vec : *kernel_matrix)
+	{
+		for(int i=0; i<num; i++)
+			vec.push_back(0);
+	}
+
+	for(int i=0; i<num; i++)
+		kernel_matrix->push_back(vector<long double>(M));
+
+	for(int i=0; i<M-num; i++)
+	{
+		for(int j=M-num; j<M; j++)
+			(*kernel_matrix)[i][j] = kernel_func((*X)[i], (*X)[j]);
+	}
+	for(int i=M-num; i<M; i++)
+	{
+		for(int j=0; j<M; j++)
+			(*kernel_matrix)[i][j] = kernel_func((*X)[i], (*X)[j]);
+	}
+
+
+
+
+	for(int i = 0; i < CLASS_NUM; i++)
+	{
+		svm[i].add_data_from_multi(first,num);
+	}
+		
+}
+
+void multiSVM::add_data(int first, Data sample)
+{
+}
 
 void multiSVM::init_kernel_matrix()
 {
